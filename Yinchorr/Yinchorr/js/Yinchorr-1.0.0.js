@@ -9309,10 +9309,12 @@ define('app/main/viewmodels/mainViewModel',[
         var // imports
             observable = sandbox.mvvm.observable,
             // properties
-            text = observable('Hello World');
+            todoItems = observable(),
+            todoInput = observable();
 
         return {
-            text: text
+            todoItems: todoItems,
+            todoInput: todoInput
         };
     };
 });
@@ -9739,7 +9741,7 @@ define('text',['module'], function (module) {
     }
     return text;
 });
-define('text!app/main/views/main.html',[],function () { return '<div id="main_template">\r\n    <section id="todoapp">\r\n        <header id="header">\r\n            <h1>todos</h1>\r\n        <!-- we need to reference todo input here -->\r\n        </header>\r\n        <!-- we need to reference todo items here -->\r\n    </section>\r\n    <footer id="info">\r\n        <p>Double-click to edit a todo</p>\r\n    </footer>\r\n</div>';});
+define('text!app/main/views/main.html',[],function () { return '<div id="main_template">\r\n    <section id="todoapp">\r\n        <header id="header">\r\n            <h1>todos</h1>\r\n            <!-- ko render:todoInput-->\r\n            <!-- /ko -->\r\n        </header>\r\n        <!-- ko render:todoItems -->\r\n        <!-- /ko -->\r\n    </section>\r\n    <footer id="info">\r\n        <p>Double-click to edit a todo</p>\r\n    </footer>\r\n</div>';});
 
 /*global define*/
 /*jslint unparam:true*/
@@ -10108,16 +10110,19 @@ define('app/main/mainModule',[
             state = sandbox.state.builder.state,
             onEntry = sandbox.state.builder.onEntry,
             // vars
-            viewModel = mainViewModel();
+            mainVM = mainViewModel();
 
         // Register application state for the module.
         registerStates('root',
             state('app',
                 state('main',
                     onEntry(function () {
+                        // create state properties for rending todo module template
+                        this.todoItems = mainVM.todoItems;
+                        this.todoInput = mainVM.todoInput;
                         // Render viewModel using 'main_template' template 
                         // (defined in main.html) and show it in the `root` region.
-                        root(template('main_template', viewModel));
+                        root(template('main_template', mainVM));
                     }))));
     };
 });
