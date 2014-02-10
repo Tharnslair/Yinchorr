@@ -10127,10 +10127,82 @@ define('app/main/mainModule',[
     };
 });
 
+/*global define */
+define('app/todo/viewmodels/todoViewModel',[
+    'sandbox!todo',
+], function (
+    sandbox
+) {
+    
+
+    return function () {
+        var observableArray = sandbox.mvvm.observableArray,  // must change this observableArray
+            items= observableArray(); // change to observableArray
+
+        return {
+            items: items
+        };
+    };
+});
+
+/*global define */
+/*jslint sloppy: true*/
+define('app/todo/bindings/todoBindings',{
+    'todo-visible': function() {
+        return {
+            visible: this.items().length > 0
+        };
+    }
+});
+
+define('text!app/todo/views/todo.html',[],function () { return '<div id="todo_items_template">\r\n    <section id="main">\r\n        <input id="toggle-all" type="checkbox">\r\n        <label for="toggle-all">Mark all as complete</label>\r\n        <ul id="todo-list">\r\n            <!-- These are here just to show the structure of the list items -->\r\n            <!-- List items should get the class `editing` when editing and `completed` when marked as completed -->\r\n            <li class="completed">\r\n                <div class="view">\r\n                    <input class="toggle" type="checkbox" checked>\r\n                    <label>Create a TodoMVC template</label>\r\n                    <button class="destroy"></button>\r\n                </div>\r\n                <input class="edit" value="Create a TodoMVC template">\r\n            </li>\r\n            <li>\r\n                <div class="view">\r\n                    <input class="toggle" type="checkbox">\r\n                    <label>Rule the web</label>\r\n                    <button class="destroy"></button>\r\n                </div>\r\n                <input class="edit" value="Rule the web">\r\n            </li>\r\n        </ul>\r\n    </section>\r\n    <!-- This footer should hidden by default and shown when there are todos -->\r\n    <footer id="footer">\r\n        <!-- This should be `0 items left` by default -->\r\n        <span id="todo-count"><strong>1</strong> item left</span>\r\n        <!-- Remove this if you don\'t implement routing -->\r\n        <ul id="filters">\r\n            <li>\r\n                <a class="selected" href="#/">All</a>\r\n            </li>\r\n            <li>\r\n                <a href="#/active">Active</a>\r\n            </li>\r\n            <li>\r\n                <a href="#/completed">Completed</a>\r\n            </li>\r\n        </ul>\r\n        <!-- Hidden if no completed items are left -->\r\n        <button id="clear-completed">Clear completed (1)</button>\r\n    </footer>\r\n</div>\r\n\r\n<div id="todo_input_template">\r\n    <input id="new-todo" placeholder="What needs to be done?" autofocus>\r\n</div>';});
+
+define('css!app/todo/styles/todo',[],function(){});
+/*global define */
+define('app/todo/todoModule',[
+    'sandbox!todo',
+    'app/todo/viewmodels/todoViewModel',
+    'bindings!todo',
+    'views!todo',
+    'styles!todo'
+], function (
+    sandbox,
+    todoViewModel
+) {
+    
+
+    return function todoModule() {
+        var // imports
+            root = sandbox.mvvm.root,
+            template = sandbox.mvvm.template,
+            registerStates = sandbox.state.registerStates,
+            state = sandbox.state.builder.state,
+            onEntry = sandbox.state.builder.onEntry,
+            // vars
+            todo = todoViewModel(sandbox);
+
+        // Register application state for the module.
+        registerStates('main',
+            state('todo',
+                onEntry(function () {
+                    // Render viewModel using 'main_template' template 
+                    // (defined in main.html) and show it in the `root` region.
+                    
+                    // display the templates
+                    this.todoItems(template('todo_items_template', todo));
+                    this.todoInput(template('todo_input_template', todo));
+
+
+                    todo.text('Hello World from todo!');
+                    root(template('todo_template', todo));
+                })));
+    };
+});
+
 define("scalejs/extensions", ["scalejs.functional","scalejs.linq-linqjs","scalejs.mvvm","scalejs.statechart-scion"], function () { return Array.prototype.slice(arguments); });
 /*global require*/
 require([
-    'scalejs!application/main'
+    'scalejs!application/main,todo'
 ], function (
     application
 ) {
@@ -10143,4 +10215,4 @@ require([
 define("app/app", function(){});
 
 (function(c){var d=document,a='appendChild',i='styleSheet',s=d.createElement('style');s.type='text/css';d.getElementsByTagName('head')[0][a](s);s[i]?s[i].cssText=c:s[a](d.createTextNode(c));})
-('.main.text {\n    color: #ff0000;\n}');
+('html,\r\nbody {\r\n\tmargin: 0;\r\n\tpadding: 0;\r\n}\r\n\r\nbutton {\r\n\tmargin: 0;\r\n\tpadding: 0;\r\n\tborder: 0;\r\n\tbackground: none;\r\n\tfont-size: 100%;\r\n\tvertical-align: baseline;\r\n\tfont-family: inherit;\r\n\tcolor: inherit;\r\n\t-webkit-appearance: none;\r\n\t-ms-appearance: none;\r\n\t-o-appearance: none;\r\n\tappearance: none;\r\n}\r\n\r\nbody {\r\n\tfont: 14px \'Helvetica Neue\', Helvetica, Arial, sans-serif;\r\n\tline-height: 1.4em;\r\n\tbackground: #eaeaea url(\'../app/main/styles/bg.png\');\r\n\tcolor: #4d4d4d;\r\n\twidth: 550px;\r\n\tmargin: 0 auto;\r\n\t-webkit-font-smoothing: antialiased;\r\n\t-moz-font-smoothing: antialiased;\r\n\t-ms-font-smoothing: antialiased;\r\n\t-o-font-smoothing: antialiased;\r\n\tfont-smoothing: antialiased;\r\n}\r\n\r\nbutton,\r\ninput[type=\"checkbox\"] {\r\n  outline: none;\r\n}\r\n\r\n#todoapp {\r\n\tbackground: #fff;\r\n\tbackground: rgba(255, 255, 255, 0.9);\r\n\tmargin: 130px 0 40px 0;\r\n\tborder: 1px solid #ccc;\r\n\tposition: relative;\r\n\tborder-top-left-radius: 2px;\r\n\tborder-top-right-radius: 2px;\r\n\tbox-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.2),\r\n\t\t\t\t0 25px 50px 0 rgba(0, 0, 0, 0.15);\r\n}\r\n\r\n#todoapp:before {\r\n\tcontent: \'\';\r\n\tborder-left: 1px solid #f5d6d6;\r\n\tborder-right: 1px solid #f5d6d6;\r\n\twidth: 2px;\r\n\tposition: absolute;\r\n\ttop: 0;\r\n\tleft: 40px;\r\n\theight: 100%;\r\n}\r\n\r\n#todoapp input::-webkit-input-placeholder {\r\n\tfont-style: italic;\r\n}\r\n\r\n#todoapp input::-moz-placeholder {\r\n\tfont-style: italic;\r\n\tcolor: #a9a9a9;\r\n}\r\n\r\n#todoapp h1 {\r\n\tposition: absolute;\r\n\ttop: -120px;\r\n\twidth: 100%;\r\n\tfont-size: 70px;\r\n\tfont-weight: bold;\r\n\ttext-align: center;\r\n\tcolor: #b3b3b3;\r\n\tcolor: rgba(255, 255, 255, 0.3);\r\n\ttext-shadow: -1px -1px rgba(0, 0, 0, 0.2);\r\n\t-webkit-text-rendering: optimizeLegibility;\r\n\t-moz-text-rendering: optimizeLegibility;\r\n\t-ms-text-rendering: optimizeLegibility;\r\n\t-o-text-rendering: optimizeLegibility;\r\n\ttext-rendering: optimizeLegibility;\r\n}\r\n\r\n#header {\r\n\tpadding-top: 15px;\r\n\tborder-radius: inherit;\r\n}\r\n\r\n#header:before {\r\n\tcontent: \'\';\r\n\tposition: absolute;\r\n\ttop: 0;\r\n\tright: 0;\r\n\tleft: 0;\r\n\theight: 15px;\r\n\tz-index: 2;\r\n\tborder-bottom: 1px solid #6c615c;\r\n\tbackground: #8d7d77;\r\n\tbackground: -webkit-gradient(linear, left top, left bottom, from(rgba(132, 110, 100, 0.8)),to(rgba(101, 84, 76, 0.8)));\r\n\tbackground: -webkit-linear-gradient(top, rgba(132, 110, 100, 0.8), rgba(101, 84, 76, 0.8));\r\n\tbackground: linear-gradient(top, rgba(132, 110, 100, 0.8), rgba(101, 84, 76, 0.8));\r\n\tfilter: progid:DXImageTransform.Microsoft.gradient(GradientType=0,StartColorStr=\'#9d8b83\', EndColorStr=\'#847670\');\r\n\tborder-top-left-radius: 1px;\r\n\tborder-top-right-radius: 1px;\r\n}\r\n\r\n#new-todo,\r\n.edit {\r\n\tposition: relative;\r\n\tmargin: 0;\r\n\twidth: 100%;\r\n\tfont-size: 24px;\r\n\tfont-family: inherit;\r\n\tline-height: 1.4em;\r\n\tborder: 0;\r\n\toutline: none;\r\n\tcolor: inherit;\r\n\tpadding: 6px;\r\n\tborder: 1px solid #999;\r\n\tbox-shadow: inset 0 -1px 5px 0 rgba(0, 0, 0, 0.2);\r\n\t-moz-box-sizing: border-box;\r\n\t-ms-box-sizing: border-box;\r\n\t-o-box-sizing: border-box;\r\n\tbox-sizing: border-box;\r\n\t-webkit-font-smoothing: antialiased;\r\n\t-moz-font-smoothing: antialiased;\r\n\t-ms-font-smoothing: antialiased;\r\n\t-o-font-smoothing: antialiased;\r\n\tfont-smoothing: antialiased;\r\n}\r\n\r\n#new-todo {\r\n\tpadding: 16px 16px 16px 60px;\r\n\tborder: none;\r\n\tbackground: rgba(0, 0, 0, 0.02);\r\n\tz-index: 2;\r\n\tbox-shadow: none;\r\n}\r\n\r\n#main {\r\n\tposition: relative;\r\n\tz-index: 2;\r\n\tborder-top: 1px dotted #adadad;\r\n}\r\n\r\nlabel[for=\'toggle-all\'] {\r\n\tdisplay: none;\r\n}\r\n\r\n#toggle-all {\r\n\tposition: absolute;\r\n\ttop: -42px;\r\n\tleft: -4px;\r\n\twidth: 40px;\r\n\ttext-align: center;\r\n\t/* Mobile Safari */\r\n\tborder: none;\r\n}\r\n\r\n#toggle-all:before {\r\n\tcontent: \'»\';\r\n\tfont-size: 28px;\r\n\tcolor: #d9d9d9;\r\n\tpadding: 0 25px 7px;\r\n}\r\n\r\n#toggle-all:checked:before {\r\n\tcolor: #737373;\r\n}\r\n\r\n#todo-list {\r\n\tmargin: 0;\r\n\tpadding: 0;\r\n\tlist-style: none;\r\n}\r\n\r\n#todo-list li {\r\n\tposition: relative;\r\n\tfont-size: 24px;\r\n\tborder-bottom: 1px dotted #ccc;\r\n}\r\n\r\n#todo-list li:last-child {\r\n\tborder-bottom: none;\r\n}\r\n\r\n#todo-list li.editing {\r\n\tborder-bottom: none;\r\n\tpadding: 0;\r\n}\r\n\r\n#todo-list li.editing .edit {\r\n\tdisplay: block;\r\n\twidth: 506px;\r\n\tpadding: 13px 17px 12px 17px;\r\n\tmargin: 0 0 0 43px;\r\n}\r\n\r\n#todo-list li.editing .view {\r\n\tdisplay: none;\r\n}\r\n\r\n#todo-list li .toggle {\r\n\ttext-align: center;\r\n\twidth: 40px;\r\n\t/* auto, since non-WebKit browsers doesn\'t support input styling */\r\n\theight: auto;\r\n\tposition: absolute;\r\n\ttop: 0;\r\n\tbottom: 0;\r\n\tmargin: auto 0;\r\n\t/* Mobile Safari */\r\n\tborder: none;\r\n\t-webkit-appearance: none;\r\n\t-ms-appearance: none;\r\n\t-o-appearance: none;\r\n\tappearance: none;\r\n}\r\n\r\n#todo-list li .toggle:after {\r\n\tcontent: \'✔\';\r\n\t/* 40 + a couple of pixels visual adjustment */\r\n\tline-height: 43px;\r\n\tfont-size: 20px;\r\n\tcolor: #d9d9d9;\r\n\ttext-shadow: 0 -1px 0 #bfbfbf;\r\n}\r\n\r\n#todo-list li .toggle:checked:after {\r\n\tcolor: #85ada7;\r\n\ttext-shadow: 0 1px 0 #669991;\r\n\tbottom: 1px;\r\n\tposition: relative;\r\n}\r\n\r\n#todo-list li label {\r\n\twhite-space: pre;\r\n\tword-break: break-word;\r\n\tpadding: 15px 60px 15px 15px;\r\n\tmargin-left: 45px;\r\n\tdisplay: block;\r\n\tline-height: 1.2;\r\n\t-webkit-transition: color 0.4s;\r\n\ttransition: color 0.4s;\r\n}\r\n\r\n#todo-list li.completed label {\r\n\tcolor: #a9a9a9;\r\n\ttext-decoration: line-through;\r\n}\r\n\r\n#todo-list li .destroy {\r\n\tdisplay: none;\r\n\tposition: absolute;\r\n\ttop: 0;\r\n\tright: 10px;\r\n\tbottom: 0;\r\n\twidth: 40px;\r\n\theight: 40px;\r\n\tmargin: auto 0;\r\n\tfont-size: 22px;\r\n\tcolor: #a88a8a;\r\n\t-webkit-transition: all 0.2s;\r\n\ttransition: all 0.2s;\r\n}\r\n\r\n#todo-list li .destroy:hover {\r\n\ttext-shadow: 0 0 1px #000,\r\n\t\t\t\t 0 0 10px rgba(199, 107, 107, 0.8);\r\n\t-webkit-transform: scale(1.3);\r\n\t-ms-transform: scale(1.3);\r\n\ttransform: scale(1.3);\r\n}\r\n\r\n#todo-list li .destroy:after {\r\n\tcontent: \'✖\';\r\n}\r\n\r\n#todo-list li:hover .destroy {\r\n\tdisplay: block;\r\n}\r\n\r\n#todo-list li .edit {\r\n\tdisplay: none;\r\n}\r\n\r\n#todo-list li.editing:last-child {\r\n\tmargin-bottom: -1px;\r\n}\r\n\r\n#footer {\r\n\tcolor: #777;\r\n\tpadding: 0 15px;\r\n\tposition: absolute;\r\n\tright: 0;\r\n\tbottom: -31px;\r\n\tleft: 0;\r\n\theight: 20px;\r\n\tz-index: 1;\r\n\ttext-align: center;\r\n}\r\n\r\n#footer:before {\r\n\tcontent: \'\';\r\n\tposition: absolute;\r\n\tright: 0;\r\n\tbottom: 31px;\r\n\tleft: 0;\r\n\theight: 50px;\r\n\tz-index: -1;\r\n\tbox-shadow: 0 1px 1px rgba(0, 0, 0, 0.3),\r\n\t\t\t\t0 6px 0 -3px rgba(255, 255, 255, 0.8),\r\n\t\t\t\t0 7px 1px -3px rgba(0, 0, 0, 0.3),\r\n\t\t\t\t0 43px 0 -6px rgba(255, 255, 255, 0.8),\r\n\t\t\t\t0 44px 2px -6px rgba(0, 0, 0, 0.2);\r\n}\r\n\r\n#todo-count {\r\n\tfloat: left;\r\n\ttext-align: left;\r\n}\r\n\r\n#filters {\r\n\tmargin: 0;\r\n\tpadding: 0;\r\n\tlist-style: none;\r\n\tposition: absolute;\r\n\tright: 0;\r\n\tleft: 0;\r\n}\r\n\r\n#filters li {\r\n\tdisplay: inline;\r\n}\r\n\r\n#filters li a {\r\n\tcolor: #83756f;\r\n\tmargin: 2px;\r\n\ttext-decoration: none;\r\n}\r\n\r\n#filters li a.selected {\r\n\tfont-weight: bold;\r\n}\r\n\r\n#clear-completed {\r\n\tfloat: right;\r\n\tposition: relative;\r\n\tline-height: 20px;\r\n\ttext-decoration: none;\r\n\tbackground: rgba(0, 0, 0, 0.1);\r\n\tfont-size: 11px;\r\n\tpadding: 0 10px;\r\n\tborder-radius: 3px;\r\n\tbox-shadow: 0 -1px 0 0 rgba(0, 0, 0, 0.2);\r\n}\r\n\r\n#clear-completed:hover {\r\n\tbackground: rgba(0, 0, 0, 0.15);\r\n\tbox-shadow: 0 -1px 0 0 rgba(0, 0, 0, 0.3);\r\n}\r\n\r\n#info {\r\n\tmargin: 65px auto 0;\r\n\tcolor: #a6a6a6;\r\n\tfont-size: 12px;\r\n\ttext-shadow: 0 1px 0 rgba(255, 255, 255, 0.7);\r\n\ttext-align: center;\r\n}\r\n\r\n#info a {\r\n\tcolor: inherit;\r\n}\r\n\r\n/*\r\n\tHack to remove background from Mobile Safari.\r\n\tCan\'t use it globally since it destroys checkboxes in Firefox and Opera\r\n*/\r\n\r\n@media screen and (-webkit-min-device-pixel-ratio:0) {\r\n\t#toggle-all,\r\n\t#todo-list li .toggle {\r\n\t\tbackground: none;\r\n\t}\r\n\r\n\t#todo-list li .toggle {\r\n\t\theight: 40px;\r\n\t}\r\n\r\n\t#toggle-all {\r\n\t\ttop: -56px;\r\n\t\tleft: -15px;\r\n\t\twidth: 65px;\r\n\t\theight: 41px;\r\n\t\t-webkit-transform: rotate(90deg);\r\n\t\t-ms-transform: rotate(90deg);\r\n\t\ttransform: rotate(90deg);\r\n\t\t-webkit-appearance: none;\r\n\t\tappearance: none;\r\n\t}\r\n}\r\n\r\n.hidden {\r\n\tdisplay: none;\r\n}\r\n\r\nhr {\r\n\tmargin: 20px 0;\r\n\tborder: 0;\r\n\tborder-top: 1px dashed #C5C5C5;\r\n\tborder-bottom: 1px dashed #F7F7F7;\r\n}\r\n\r\n.learn a {\r\n\tfont-weight: normal;\r\n\ttext-decoration: none;\r\n\tcolor: #b83f45;\r\n}\r\n\r\n.learn a:hover {\r\n\ttext-decoration: underline;\r\n\tcolor: #787e7e;\r\n}\r\n\r\n.learn h3,\r\n.learn h4,\r\n.learn h5 {\r\n\tmargin: 10px 0;\r\n\tfont-weight: 500;\r\n\tline-height: 1.2;\r\n\tcolor: #000;\r\n}\r\n\r\n.learn h3 {\r\n\tfont-size: 24px;\r\n}\r\n\r\n.learn h4 {\r\n\tfont-size: 18px;\r\n}\r\n\r\n.learn h5 {\r\n\tmargin-bottom: 0;\r\n\tfont-size: 14px;\r\n}\r\n\r\n.learn ul {\r\n\tpadding: 0;\r\n\tmargin: 0 0 30px 25px;\r\n}\r\n\r\n.learn li {\r\n\tline-height: 20px;\r\n}\r\n\r\n.learn p {\r\n\tfont-size: 15px;\r\n\tfont-weight: 300;\r\n\tline-height: 1.3;\r\n\tmargin-top: 0;\r\n\tmargin-bottom: 0;\r\n}\r\n\r\n.quote {\r\n\tborder: none;\r\n\tmargin: 20px 0 60px 0;\r\n}\r\n\r\n.quote p {\r\n\tfont-style: italic;\r\n}\r\n\r\n.quote p:before {\r\n\tcontent: \'“\';\r\n\tfont-size: 50px;\r\n\topacity: .15;\r\n\tposition: absolute;\r\n\ttop: -20px;\r\n\tleft: 3px;\r\n}\r\n\r\n.quote p:after {\r\n\tcontent: \'”\';\r\n\tfont-size: 50px;\r\n\topacity: .15;\r\n\tposition: absolute;\r\n\tbottom: -42px;\r\n\tright: 3px;\r\n}\r\n\r\n.quote footer {\r\n\tposition: absolute;\r\n\tbottom: -40px;\r\n\tright: 0;\r\n}\r\n\r\n.quote footer img {\r\n\tborder-radius: 3px;\r\n}\r\n\r\n.quote footer a {\r\n\tmargin-left: 5px;\r\n\tvertical-align: middle;\r\n}\r\n\r\n.speech-bubble {\r\n\tposition: relative;\r\n\tpadding: 10px;\r\n\tbackground: rgba(0, 0, 0, .04);\r\n\tborder-radius: 5px;\r\n}\r\n\r\n.speech-bubble:after {\r\n\tcontent: \'\';\r\n\tposition: absolute;\r\n\ttop: 100%;\r\n\tright: 30px;\r\n\tborder: 13px solid transparent;\r\n\tborder-top-color: rgba(0, 0, 0, .04);\r\n}\r\n\r\n.learn-bar > .learn {\r\n\tposition: absolute;\r\n\twidth: 272px;\r\n\ttop: 8px;\r\n\tleft: -300px;\r\n\tpadding: 10px;\r\n\tborder-radius: 5px;\r\n\tbackground-color: rgba(255, 255, 255, .6);\r\n\t-webkit-transition-property: left;\r\n\ttransition-property: left;\r\n\t-webkit-transition-duration: 500ms;\r\n\ttransition-duration: 500ms;\r\n}\r\n\r\n@media (min-width: 899px) {\r\n\t.learn-bar {\r\n\t\twidth: auto;\r\n\t\tmargin: 0 0 0 300px;\r\n\t}\r\n\r\n\t.learn-bar > .learn {\r\n\t\tleft: 8px;\r\n\t}\r\n\r\n\t.learn-bar #todoapp {\r\n\t\twidth: 550px;\r\n\t\tmargin: 130px auto 40px auto;\r\n\t}\r\n}.todo.text {\r\n    color: #ff0000;\r\n}');

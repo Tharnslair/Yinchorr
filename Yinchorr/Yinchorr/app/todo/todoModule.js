@@ -13,7 +13,6 @@ define([
 
     return function todoModule() {
         var // imports
-            root = sandbox.mvvm.root,
             template = sandbox.mvvm.template,
             registerStates = sandbox.state.registerStates,
             state = sandbox.state.builder.state,
@@ -22,13 +21,12 @@ define([
             todo = todoViewModel(sandbox);
 
         // Register application state for the module.
-        registerStates('app',
+        registerStates('main',
             state('todo',
                 onEntry(function () {
-                    // Render viewModel using 'main_template' template 
-                    // (defined in main.html) and show it in the `root` region.
-                    todo.text('Hello World from todo!');
-                    root(template('todo_template', todo));
+                    // pass the template bindings to the appropriate property
+                    this.todoItems(template('todo_items_template', todo));
+                    this.todoInput(template('todo_input_template', todo));
                 })));
     };
 });

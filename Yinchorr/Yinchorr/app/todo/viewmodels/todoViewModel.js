@@ -1,17 +1,17 @@
 ﻿/*global define */
 define([
-    'sandbox!todo',
+    'sandbox!todo'
 ], function (
     sandbox
 ) {
     'use strict';
 
     return function () {
-        var observable = sandbox.mvvm.observable,
-            text = observable();
+        var observableArray = sandbox.mvvm.observableArray,
+            items = observableArray();
 
         return {
-            text: text
+            items: items
         };
     };
 });
