@@ -10135,10 +10135,22 @@ define('app/todo/viewmodels/todoViewModel',[
 
     return function () {
         var observableArray = sandbox.mvvm.observableArray,
-            items = observableArray();
+            items = observableArray(),
+            newItem = observable();
+
+        // add item function
+        function addItem() {
+            var item = newItem();
+            if (has(item, "trim") && item.trim()) {
+                items.push(item.trim());
+            }
+            newItem("");
+        }
 
         return {
-            items: items
+            items: items,
+            newItem: newItem,
+            addItem: addItem
         };
     };
 });
@@ -10149,10 +10161,25 @@ define('app/todo/bindings/todoBindings',{
         return {
             visible: this.items().length > 0
         };
+    },
+    
+    // adding to todo input item
+    'todo-input': function() {
+        return {
+            value: this.newItem,
+            valueUpdate: 'afterkeydown',
+            event: {
+                keyup: function(data, e) {
+                    if (e.keyCode === ENTER_KEY) {
+                        addItem();
+                    }
+                }
+            }
+        };
     }
 });
 
-define('text!app/todo/views/todo.html',[],function () { return '<div id="todo_items_template">\r\n    <section id="main" data-class="todo-visible">\r\n        <input id="toggle-all" type="checkbox">\r\n        <label for="toggle-all">Mark all as complete</label>\r\n        <ul id="todo-list">\r\n            <!-- These are here just to show the structure of the list items -->\r\n            <!-- List items should get the class `editing` when editing and `completed` when marked as completed -->\r\n            <li class="completed">\r\n                <div class="view">\r\n                    <input class="toggle" type="checkbox" checked>\r\n                    <label>Create a TodoMVC template</label>\r\n                    <button class="destroy"></button>\r\n                </div>\r\n                <input class="edit" value="Create a TodoMVC template">\r\n            </li>\r\n            <li>\r\n                <div class="view">\r\n                    <input class="toggle" type="checkbox">\r\n                    <label>Rule the web</label>\r\n                    <button class="destroy"></button>\r\n                </div>\r\n                <input class="edit" value="Rule the web">\r\n            </li>\r\n        </ul>\r\n    </section>\r\n\r\n    <footer id="footer" data-class="todo-visible">\r\n        <!-- This should be `0 items left` by default -->\r\n        <span id="todo-count"><strong>1</strong> item left</span>\r\n        <!-- Remove this if you don\'t implement routing -->\r\n        <ul id="filters">\r\n            <li>\r\n                <a class="selected" href="#/">All</a>\r\n            </li>\r\n            <li>\r\n                <a href="#/active">Active</a>\r\n            </li>\r\n            <li>\r\n                <a href="#/completed">Completed</a>\r\n            </li>\r\n        </ul>\r\n        <!-- Hidden if no completed items are left -->\r\n        <button id="clear-completed">Clear completed (1)</button>\r\n    </footer>\r\n</div>\r\n\r\n<div id="todo_input_template">\r\n    <input id="new-todo" placeholder="What needs to be done?" autofocus>\r\n</div>';});
+define('text!app/todo/views/todo.html',[],function () { return '<div id="todo_items_template">\r\n    <section id="main" data-class="todo-visible">\r\n        <input id="toggle-all" type="checkbox"/>\r\n        <label for="toggle-all">Mark all as complete</label>\r\n        <ul id="todo-list" data-bind="foreach: items">\r\n            <li class="completed">\r\n                <div class="view">\r\n                    <input class="toggle" type="checkbox" checked/>\r\n                    <label data-bind="text: $data"></label>\r\n                    <button class="destroy">Destroy!!!</button>\r\n                </div>\r\n                <input class="edit" value="Create a new ToDo Item"/>\r\n            </li>\r\n        </ul>\r\n    </section>\r\n\r\n    <footer id="footer" data-class="todo-visible">\r\n        <!-- This should be `0 items left` by default -->\r\n        <span id="todo-count"><strong>1</strong> item left</span>\r\n        <!-- Remove this if you don\'t implement routing -->\r\n        <ul id="filters">\r\n            <li>\r\n                <a class="selected" href="#/">All</a>\r\n            </li>\r\n            <li>\r\n                <a href="#/active">Active</a>\r\n            </li>\r\n            <li>\r\n                <a href="#/completed">Completed</a>\r\n            </li>\r\n        </ul>\r\n        <!-- Hidden if no completed items are left -->\r\n        <button id="clear-completed">Clear completed (1)</button>\r\n    </footer>\r\n</div>\r\n\r\n<div id="todo_input_template">\r\n    <input id="new-todo" placeholder="What needs to be done?" autofocus>\r\n</div>';});
 
 define('css!app/todo/styles/todo',[],function(){});
 /*global define */
