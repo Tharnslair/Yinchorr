@@ -9318,7 +9318,6 @@ define('app/main/viewmodels/mainViewModel',[
         };
     };
 });
-
 /*global define*/
 /*jslint unparam:true*/
 define('views',[],function () {
@@ -9792,7 +9791,6 @@ define('app/main/bindings/mainBindings',{
         };
     }
 });
-
 /*global define*/
 /*jslint unparam:true*/
 define('styles',[],function () {
@@ -10129,33 +10127,32 @@ define('app/main/mainModule',[
 
 /*global define */
 define('app/todo/viewmodels/todoViewModel',[
-    'sandbox!todo',
+    'sandbox!todo'
 ], function (
     sandbox
 ) {
     
 
     return function () {
-        var observableArray = sandbox.mvvm.observableArray,  // must change this observableArray
-            items= observableArray(); // change to observableArray
+        var observableArray = sandbox.mvvm.observableArray,
+            items = observableArray();
 
         return {
             items: items
         };
     };
 });
-
 /*global define */
 /*jslint sloppy: true*/
 define('app/todo/bindings/todoBindings',{
-    'todo-visible': function() {
+    'todo-visible': function () {
         return {
             visible: this.items().length > 0
         };
     }
 });
 
-define('text!app/todo/views/todo.html',[],function () { return '<div id="todo_items_template">\r\n    <section id="main">\r\n        <input id="toggle-all" type="checkbox">\r\n        <label for="toggle-all">Mark all as complete</label>\r\n        <ul id="todo-list">\r\n            <!-- These are here just to show the structure of the list items -->\r\n            <!-- List items should get the class `editing` when editing and `completed` when marked as completed -->\r\n            <li class="completed">\r\n                <div class="view">\r\n                    <input class="toggle" type="checkbox" checked>\r\n                    <label>Create a TodoMVC template</label>\r\n                    <button class="destroy"></button>\r\n                </div>\r\n                <input class="edit" value="Create a TodoMVC template">\r\n            </li>\r\n            <li>\r\n                <div class="view">\r\n                    <input class="toggle" type="checkbox">\r\n                    <label>Rule the web</label>\r\n                    <button class="destroy"></button>\r\n                </div>\r\n                <input class="edit" value="Rule the web">\r\n            </li>\r\n        </ul>\r\n    </section>\r\n    <!-- This footer should hidden by default and shown when there are todos -->\r\n    <footer id="footer">\r\n        <!-- This should be `0 items left` by default -->\r\n        <span id="todo-count"><strong>1</strong> item left</span>\r\n        <!-- Remove this if you don\'t implement routing -->\r\n        <ul id="filters">\r\n            <li>\r\n                <a class="selected" href="#/">All</a>\r\n            </li>\r\n            <li>\r\n                <a href="#/active">Active</a>\r\n            </li>\r\n            <li>\r\n                <a href="#/completed">Completed</a>\r\n            </li>\r\n        </ul>\r\n        <!-- Hidden if no completed items are left -->\r\n        <button id="clear-completed">Clear completed (1)</button>\r\n    </footer>\r\n</div>\r\n\r\n<div id="todo_input_template">\r\n    <input id="new-todo" placeholder="What needs to be done?" autofocus>\r\n</div>';});
+define('text!app/todo/views/todo.html',[],function () { return '<div id="todo_items_template">\r\n    <section id="main" data-class="todo-visible">\r\n        <input id="toggle-all" type="checkbox">\r\n        <label for="toggle-all">Mark all as complete</label>\r\n        <ul id="todo-list">\r\n            <!-- These are here just to show the structure of the list items -->\r\n            <!-- List items should get the class `editing` when editing and `completed` when marked as completed -->\r\n            <li class="completed">\r\n                <div class="view">\r\n                    <input class="toggle" type="checkbox" checked>\r\n                    <label>Create a TodoMVC template</label>\r\n                    <button class="destroy"></button>\r\n                </div>\r\n                <input class="edit" value="Create a TodoMVC template">\r\n            </li>\r\n            <li>\r\n                <div class="view">\r\n                    <input class="toggle" type="checkbox">\r\n                    <label>Rule the web</label>\r\n                    <button class="destroy"></button>\r\n                </div>\r\n                <input class="edit" value="Rule the web">\r\n            </li>\r\n        </ul>\r\n    </section>\r\n\r\n    <footer id="footer" data-class="todo-visible">\r\n        <!-- This should be `0 items left` by default -->\r\n        <span id="todo-count"><strong>1</strong> item left</span>\r\n        <!-- Remove this if you don\'t implement routing -->\r\n        <ul id="filters">\r\n            <li>\r\n                <a class="selected" href="#/">All</a>\r\n            </li>\r\n            <li>\r\n                <a href="#/active">Active</a>\r\n            </li>\r\n            <li>\r\n                <a href="#/completed">Completed</a>\r\n            </li>\r\n        </ul>\r\n        <!-- Hidden if no completed items are left -->\r\n        <button id="clear-completed">Clear completed (1)</button>\r\n    </footer>\r\n</div>\r\n\r\n<div id="todo_input_template">\r\n    <input id="new-todo" placeholder="What needs to be done?" autofocus>\r\n</div>';});
 
 define('css!app/todo/styles/todo',[],function(){});
 /*global define */
@@ -10173,7 +10170,6 @@ define('app/todo/todoModule',[
 
     return function todoModule() {
         var // imports
-            root = sandbox.mvvm.root,
             template = sandbox.mvvm.template,
             registerStates = sandbox.state.registerStates,
             state = sandbox.state.builder.state,
@@ -10185,16 +10181,9 @@ define('app/todo/todoModule',[
         registerStates('main',
             state('todo',
                 onEntry(function () {
-                    // Render viewModel using 'main_template' template 
-                    // (defined in main.html) and show it in the `root` region.
-                    
-                    // display the templates
+                    // pass the template bindings to the appropriate property
                     this.todoItems(template('todo_items_template', todo));
                     this.todoInput(template('todo_input_template', todo));
-
-
-                    todo.text('Hello World from todo!');
-                    root(template('todo_template', todo));
                 })));
     };
 });
