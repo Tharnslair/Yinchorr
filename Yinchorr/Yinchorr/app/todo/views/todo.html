@@ -1,6 +1,6 @@
 ﻿<div id="todo_items_template">
     <section id="main" data-class="todo-visible">
-        <input id="toggle-all" type="checkbox"/>
+        <input id="toggle-all" type="checkbox" data-bind="checked: checkAll"/>
         <label for="toggle-all">Mark all as complete</label>
         <ul id="todo-list" data-bind="foreach: items">
             <li class data-bind="css:{ completed: completed}">
@@ -9,7 +9,7 @@
                     <label data-bind="text: title"></label>
                     <button class="destroy"></button>
                 </div>
-                <input class="edit" value="Create a new ToDo Item"/>
+                <input class="edit" data-class="todo-edit"/>
             </li>
         </ul>
     </section>

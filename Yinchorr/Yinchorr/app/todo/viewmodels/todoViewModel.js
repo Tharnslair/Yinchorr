@@ -17,18 +17,25 @@ define([
         function addItem() {
             var item = newItem();
             if (has(item, "trim") && item.trim()) {
-                items.push({
-                    title: item.trim(),
-                    completed: observable(false)
-                });
+                items.push(itemViewModel({ title: item, completed: false }));
             }
             newItem("");
         }
 
+        checkAll = computed({
+            read: function() {
+                return items().all("$.completed()");
+            },
+            write: function(value) {
+                items().forEach(function(item) { item.completed(value); });
+            }
+        });
+
         return {
             items: items,
             newItem: newItem,
-            addItem: addItem
+            addItem: addItem,
+            checkAll: checkAll
         };
     };
 });

@@ -19,8 +19,23 @@ define(function () {
                             addItem();
                         }
                     }
+                },
+                hasFocus: this.editMode
+            };
+        },
+        
+        'todo-item': function() {
+            return {
+                css: {
+                    completed: this.completed,
+                    editing: this.editMode
+                },
+
+                event: {
+                    dblclick: this.beginEdit
                 }
             };
         }
+
     };
 });
