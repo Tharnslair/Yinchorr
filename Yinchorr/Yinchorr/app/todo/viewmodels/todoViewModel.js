@@ -1,8 +1,11 @@
 ﻿/*global define */
 define([
-    'sandbox!todo'
+    'sandbox!todo',
+    'app/todo/viewmodels/itemViewModel'
 ], function (
-    sandbox
+    sandbox,
+    // have to add any added modlels here
+    itemViewModel
 ) {
     'use strict';
 
@@ -10,14 +13,18 @@ define([
         var observable = sandbox.mvvm.observable,
             observableArray = sandbox.mvvm.observableArray,
             has = sandbox.object.has,
+            // need to pull in computed here didn't see that one
+            computed = sandbox.mvvm.computed,
             //properties
             items = observableArray(),
-            newItem = observable();
+            newItem = observable(), // have to remember to use , instead of ; on these
+            // forgot to add checkAll here
+            checkAll;
 
         function addItem() {
             var item = newItem();
             if (has(item, "trim") && item.trim()) {
-                items.push(itemViewModel({ title: item, completed: false }));
+                items.push(itemViewModel({ title: item, completed: false }, items));
             }
             newItem("");
         }

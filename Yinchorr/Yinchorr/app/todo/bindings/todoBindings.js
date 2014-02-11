@@ -8,22 +8,55 @@ define(function () {
                 visible: this.items().length > 0
             };
         },
-        'todo-input': function () {
+        //'todo-input': function () {
+        //    var addItem = this.addItem;
+        //    return {
+        //        value: this.newItem,
+        //        valueUpdate: 'afterkeydown',
+        //        event: {
+        //            keyup: function (data, e) {
+        //                if (e.keyCode === ENTER_KEY) {
+        //                    addItem();
+        //                }
+        //            }
+        //        },
+        //        hasFocus: this.editMode
+        //    };
+        //},
+        
+        'todo-input' : function() {
             var addItem = this.addItem;
             return {
                 value: this.newItem,
                 valueUpdate: 'afterkeydown',
                 event: {
-                    keyup: function (data, e) {
+                    keyup: function(data, e) {
                         if (e.keyCode === ENTER_KEY) {
                             addItem();
                         }
                     }
+                }
+            };
+        },
+        
+        // edit item
+        'todo-edit': function() {
+            var item = this;
+
+            return {
+                value: this.title,
+                valueUpdate: 'afterkeydown',
+                event:  {
+                    keyup: function(data, e) {
+                        if (e.keyCode === ENTER_KEY) {
+                            item.endEdit();
+                        }
+                    } 
                 },
                 hasFocus: this.editMode
             };
         },
-        
+
         'todo-item': function() {
             return {
                 css: {

@@ -10126,10 +10126,58 @@ define('app/main/mainModule',[
 });
 
 /*global define */
-define('app/todo/viewmodels/todoViewModel',[
+define('app/todo/viewmodels/itemViewModel',[
     'sandbox!todo'
 ], function (
     sandbox
+) {
+    
+
+    return function (item, items) {
+        var observable = sandbox.mvvm.observable,
+            //properties
+            title = observable(item.title),
+            completed = observable(item.completed),
+            editMode = observable(false);
+
+        function beginEdit() {
+            editMode(true);
+        }
+
+        function endEdit() {
+            var newTitle = title().trim();
+            if (newTitle) {
+                title(newTitle);
+                editMode(false);
+            } else {
+                //we need to remove the item
+                //if the title is an empty string
+                items.remove(this);
+            }
+        }
+        
+        function remove() {
+            items.remove(this);
+        }
+
+        return {
+            title: title,
+            completed: completed,
+            editMode: editMode,
+            beginEdit: beginEdit,
+            endEdit: endEdit,
+            remove: remove
+        };
+    };
+});
+/*global define */
+define('app/todo/viewmodels/todoViewModel',[
+    'sandbox!todo',
+    'app/todo/viewmodels/itemViewModel'
+], function (
+    sandbox,
+    // have to add any added modlels here
+    itemViewModel
 ) {
     
 
@@ -10137,25 +10185,36 @@ define('app/todo/viewmodels/todoViewModel',[
         var observable = sandbox.mvvm.observable,
             observableArray = sandbox.mvvm.observableArray,
             has = sandbox.object.has,
+            // need to pull in computed here didn't see that one
+            computed = sandbox.mvvm.computed,
             //properties
             items = observableArray(),
-            newItem = observable();
+            newItem = observable(), // have to remember to use , instead of ; on these
+            // forgot to add checkAll here
+            checkAll;
 
         function addItem() {
             var item = newItem();
             if (has(item, "trim") && item.trim()) {
-                items.push({
-                    title: item.trim(),
-                    completed: observable(false)
-                });
+                items.push(itemViewModel({ title: item, completed: false }, items));
             }
             newItem("");
         }
 
+        checkAll = computed({
+            read: function() {
+                return items().all("$.completed()");
+            },
+            write: function(value) {
+                items().forEach(function(item) { item.completed(value); });
+            }
+        });
+
         return {
             items: items,
             newItem: newItem,
-            addItem: addItem
+            addItem: addItem,
+            checkAll: checkAll
         };
     };
 });
@@ -10169,24 +10228,72 @@ define('app/todo/bindings/todoBindings',[],function () {
                 visible: this.items().length > 0
             };
         },
-        'todo-input': function () {
+        //'todo-input': function () {
+        //    var addItem = this.addItem;
+        //    return {
+        //        value: this.newItem,
+        //        valueUpdate: 'afterkeydown',
+        //        event: {
+        //            keyup: function (data, e) {
+        //                if (e.keyCode === ENTER_KEY) {
+        //                    addItem();
+        //                }
+        //            }
+        //        },
+        //        hasFocus: this.editMode
+        //    };
+        //},
+        
+        'todo-input' : function() {
             var addItem = this.addItem;
             return {
                 value: this.newItem,
                 valueUpdate: 'afterkeydown',
                 event: {
-                    keyup: function (data, e) {
+                    keyup: function(data, e) {
                         if (e.keyCode === ENTER_KEY) {
                             addItem();
                         }
                     }
                 }
             };
+        },
+        
+        // edit item
+        'todo-edit': function() {
+            var item = this;
+
+            return {
+                value: this.title,
+                valueUpdate: 'afterkeydown',
+                event:  {
+                    keyup: function(data, e) {
+                        if (e.keyCode === ENTER_KEY) {
+                            item.endEdit();
+                        }
+                    } 
+                },
+                hasFocus: this.editMode
+            };
+        },
+
+        'todo-item': function() {
+            return {
+                css: {
+                    completed: this.completed,
+                    editing: this.editMode
+                },
+
+                event: {
+                    dblclick: this.beginEdit
+                }
+            };
         }
+
     };
 });
 
-define('text!app/todo/views/todo.html',[],function () { return '<div id="todo_items_template">\r\n    <section id="main" data-class="todo-visible">\r\n        <input id="toggle-all" type="checkbox"/>\r\n        <label for="toggle-all">Mark all as complete</label>\r\n        <ul id="todo-list" data-bind="foreach: items">\r\n            <li class data-bind="css:{ completed: completed}">\r\n                <div class="view">\r\n                    <input class="toggle" type="checkbox" data-bind="checked: completed"/>\r\n                    <label data-bind="text: title"></label>\r\n                    <button class="destroy">Destroy!!!</button>\r\n                </div>\r\n                <input class="edit" value="Create a new ToDo Item"/>\r\n            </li>\r\n        </ul>\r\n    </section>\r\n\r\n    <footer id="footer" data-class="todo-visible">\r\n        <!-- This should be `0 items left` by default -->\r\n        <span id="todo-count"><strong>1</strong> item left</span>\r\n        <!-- Remove this if you don\'t implement routing -->\r\n        <ul id="filters">\r\n            <li>\r\n                <a class="selected" href="#/">All</a>\r\n            </li>\r\n            <li>\r\n                <a href="#/active">Active</a>\r\n            </li>\r\n            <li>\r\n                <a href="#/completed">Completed</a>\r\n            </li>\r\n        </ul>\r\n        <!-- Hidden if no completed items are left -->\r\n        <button id="clear-completed">Clear completed (1)</button>\r\n    </footer>\r\n</div>\r\n\r\n<div id="todo_input_template">\r\n    <input id="new-todo" data-class="todo-input" placeholder="What needs to be done?" autofocus>\r\n</div>';});
+define('text!app/todo/views/todo.html',[],function () { return '<div id="todo_items_template">\r\n    <section id="main" data-class="todo-visible">\r\n        <input id="toggle-all" type="checkbox" data-bind="checked: checkAll">\r\n        <label for="toggle-all">Mark all as complete</label>\r\n        <ul id="todo-list" data-bind="foreach: items">\r\n            <li class data-bind="css:{ completed: completed}">\r\n                <div class="view">\r\n                    <input class="toggle" type="checkbox" data-bind="checked: completed"/>\r\n                    <label data-bind="text: title"></label>\r\n                    <button class="destroy" data-bind="click: remove"></button>\r\n                </div>\r\n                <input class="edit" data-class="todo-edit"/>\r\n            </li>\r\n        </ul>\r\n    </section>\r\n\r\n    <footer id="footer" data-class="todo-visible">\r\n        <!-- This should be `0 items left` by default -->\r\n        <span id="todo-count"><strong>1</strong> item left</span>\r\n        <!-- Remove this if you don\'t implement routing -->\r\n        <ul id="filters">\r\n            <li>\r\n                <a class="selected" href="#/">All</a>\r\n            </li>\r\n            <li>\r\n                <a href="#/active">Active</a>\r\n            </li>\r\n            <li>\r\n                <a href="#/completed">Completed</a>\r\n            </li>\r\n        </ul>\r\n        <!-- Hidden if no completed items are left -->\r\n        <button id="clear-completed">Clear completed (1)</button>\r\n    </footer>\r\n</div>\r\n\r\n<div id="todo_input_template">\r\n    <input id="new-todo" data-class="todo-input" placeholder="What needs to be done?" autofocus>\r\n</div>';});
 
 define('css!app/todo/styles/todo',[],function(){});
 /*global define */
