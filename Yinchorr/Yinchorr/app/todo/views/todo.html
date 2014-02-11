@@ -3,11 +3,11 @@
         <input id="toggle-all" type="checkbox"/>
         <label for="toggle-all">Mark all as complete</label>
         <ul id="todo-list" data-bind="foreach: items">
-            <li class="completed">
+            <li class data-bind="css:{ completed: completed}">
                 <div class="view">
-                    <input class="toggle" type="checkbox" checked/>
-                    <label data-bind="text: $data"></label>
-                    <button class="destroy">Destroy!!!</button>
+                    <input class="toggle" type="checkbox" data-bind="checked: completed"/>
+                    <label data-bind="text: title"></label>
+                    <button class="destroy"></button>
                 </div>
                 <input class="edit" value="Create a new ToDo Item"/>
             </li>
