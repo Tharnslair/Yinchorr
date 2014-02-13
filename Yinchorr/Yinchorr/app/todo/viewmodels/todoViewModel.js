@@ -13,11 +13,16 @@ define([
             observable = sandbox.mvvm.observable,
             has = sandbox.object.has,
             computed = sandbox.mvvm.computed,
+            raise = sandbox.state.raise,
             //properties
             items = observableArray(),
             newItem = observable(),
             checkAll,
-            completedItems;
+            completedItems,
+            viewableOptions,
+            currentView = observable(),
+            viewableItems;
+
 
         function toItem(itemVM) {
             return {
@@ -57,6 +62,29 @@ define([
             return items().where("$.completed()").toArray();
         });
 
+        viewableOptions = ['All', 'Active', 'Completed'].map(function (name) {
+            return {
+                name: name,
+                raiseEvent: function () {
+                    raise('todo.' + name);
+                }
+            };
+        });
+
+        viewableItems = computed(function () {
+            var view = currentView();
+
+            if (view === 'Active') {
+                return items().where("!$.completed()").toArray();
+            }
+
+            if (view === 'Completed') {
+                return items().where("$.completed()").toArray();
+            }
+
+            return items();
+        });
+
         if (has(localStorage['todos-scalejs'])) {
             items(JSON.parse(localStorage['todos-scalejs']).map(toItemViewModel));
         }
@@ -71,7 +99,10 @@ define([
             addItem: addItem,
             checkAll: checkAll,
             completedItems: completedItems,
-            removeCompletedItems: removeCompletedItems
+            removeCompletedItems: removeCompletedItems,
+            viewableOptions: viewableOptions,
+            currentView: currentView,
+            viewableItems: viewableItems
         };
     };
 });

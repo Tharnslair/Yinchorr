@@ -2,38 +2,29 @@
     <section id="main" data-class="todo-visible">
         <input id="toggle-all" type="checkbox" data-bind="checked: checkAll">
         <label for="toggle-all">Mark all as complete</label>
-        <ul id="todo-list" data-bind="foreach: items">
-            <li class class="todo-item">
+        <ul id="todo-list" data-bind="foreach: viewableItems">
+            <li data-class="todo-item">
                 <div class="view">
-                    <input class="toggle" type="checkbox" data-bind="checked: completed"/>
+                    <input class="toggle" type="checkbox" data-bind="checked: completed" />
                     <label data-bind="text: title"></label>
                     <button class="destroy" data-bind="click: remove"></button>
                 </div>
-                <input class="edit" data-class="todo-edit"/>
+                <input class="edit" data-class="todo-edit" />
             </li>
         </ul>
     </section>
 
     <footer id="footer" data-class="todo-visible">
-        <!-- This should be `0 items left` by default -->
         <span id="todo-count">
             <strong data-bind="text: items().length"></strong>
             <!-- ko class:todo-count-text -->
             <!-- /ko -->
         </span>
-        <!-- Remove this if you don't implement routing -->
-        <ul id="filters">
+        <ul id="filters" data-bind="foreach: viewableOptions">
             <li>
-                <a class="selected" href="#/">All</a>
-            </li>
-            <li>
-                <a href="#/active">Active</a>
-            </li>
-            <li>
-                <a href="#/completed">Completed</a>
+                <a href="#" data-class="todo-view"></a>
             </li>
         </ul>
-        <!-- Hidden if no completed items are left -->
         <button id="clear-completed" data-class="todo-clear-completed"></button>
     </footer>
 </div>
