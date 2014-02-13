@@ -10138,9 +10138,11 @@ define('app/todo/viewmodels/itemViewModel',[
             //properties
             title = observable(item.title),
             completed = observable(item.completed),
-            editMode = observable(false);
+            editMode = observable(false),
+            previousTitle;
 
         function beginEdit() {
+            previousTitle = this.title();
             editMode(true);
         }
 
@@ -10150,14 +10152,17 @@ define('app/todo/viewmodels/itemViewModel',[
                 title(newTitle);
                 editMode(false);
             } else {
-                //we need to remove the item
-                //if the title is an empty string
                 items.remove(this);
             }
         }
-        
+
         function remove() {
             items.remove(this);
+        }
+
+        function cancelEdit() {
+            title(previousTitle);
+            editMode(false);
         }
 
         return {
@@ -10166,91 +10171,107 @@ define('app/todo/viewmodels/itemViewModel',[
             editMode: editMode,
             beginEdit: beginEdit,
             endEdit: endEdit,
-            remove: remove
+            remove: remove,
+            cancelEdit: cancelEdit
         };
     };
 });
-/*global define */
+/*global define,localStorage */
 define('app/todo/viewmodels/todoViewModel',[
     'sandbox!todo',
     'app/todo/viewmodels/itemViewModel'
 ], function (
     sandbox,
-    // have to add any added modlels here
     itemViewModel
 ) {
     
 
     return function () {
-        var observable = sandbox.mvvm.observable,
-            observableArray = sandbox.mvvm.observableArray,
+        var observableArray = sandbox.mvvm.observableArray,
+            observable = sandbox.mvvm.observable,
             has = sandbox.object.has,
-            // need to pull in computed here didn't see that one
             computed = sandbox.mvvm.computed,
             //properties
             items = observableArray(),
-            newItem = observable(), // have to remember to use , instead of ; on these
-            // forgot to add checkAll here
-            checkAll;
+            newItem = observable(),
+            checkAll,
+            completedItems;
+
+        function toItem(itemVM) {
+            return {
+                title: itemVM.title(),
+                completed: itemVM.completed()
+            };
+        }
+
+        function toItemViewModel(item) {
+            return itemViewModel(item, items);
+        }
 
         function addItem() {
             var item = newItem();
             if (has(item, "trim") && item.trim()) {
-                items.push(itemViewModel({ title: item, completed: false }, items));
+                items.push(toItemViewModel({ title: item, completed: false }));
             }
             newItem("");
         }
 
+        function removeCompletedItems() {
+            completedItems().forEach(function (item) {
+                item.remove();
+            });
+        }
+
         checkAll = computed({
-            read: function() {
+            read: function () {
                 return items().all("$.completed()");
             },
-            write: function(value) {
-                items().forEach(function(item) { item.completed(value); });
+            write: function (value) {
+                items().forEach(function (item) { item.completed(value); });
             }
+        });
+
+        completedItems = computed(function () {
+            return items().where("$.completed()").toArray();
+        });
+
+        if (has(localStorage['todos-scalejs'])) {
+            items(JSON.parse(localStorage['todos-scalejs']).map(toItemViewModel));
+        }
+
+        computed(function () {
+            localStorage['todos-scalejs'] = JSON.stringify(items().map(toItem));
         });
 
         return {
             items: items,
             newItem: newItem,
             addItem: addItem,
-            checkAll: checkAll
+            checkAll: checkAll,
+            completedItems: completedItems,
+            removeCompletedItems: removeCompletedItems
         };
     };
 });
 /*global define */
 /*jslint sloppy: true,unparam: true*/
 define('app/todo/bindings/todoBindings',[],function () {
-    var ENTER_KEY = 13;
+    var ENTER_KEY = 13,
+        ESCAPE_KEY = 27;
+
     return {
         'todo-visible': function () {
             return {
                 visible: this.items().length > 0
             };
         },
-        //'todo-input': function () {
-        //    var addItem = this.addItem;
-        //    return {
-        //        value: this.newItem,
-        //        valueUpdate: 'afterkeydown',
-        //        event: {
-        //            keyup: function (data, e) {
-        //                if (e.keyCode === ENTER_KEY) {
-        //                    addItem();
-        //                }
-        //            }
-        //        },
-        //        hasFocus: this.editMode
-        //    };
-        //},
-        
-        'todo-input' : function() {
+        'todo-input': function () {
             var addItem = this.addItem;
             return {
                 value: this.newItem,
                 valueUpdate: 'afterkeydown',
                 event: {
-                    keyup: function(data, e) {
+                    keyup: function (data, e) {
                         if (e.keyCode === ENTER_KEY) {
                             addItem();
                         }
@@ -10258,42 +10279,53 @@ define('app/todo/bindings/todoBindings',[],function () {
                 }
             };
         },
-        
-        // edit item
-        'todo-edit': function() {
-            var item = this;
-
-            return {
-                value: this.title,
-                valueUpdate: 'afterkeydown',
-                event:  {
-                    keyup: function(data, e) {
-                        if (e.keyCode === ENTER_KEY) {
-                            item.endEdit();
-                        }
-                    } 
-                },
-                hasFocus: this.editMode
-            };
-        },
-
-        'todo-item': function() {
+        'todo-item': function () {
             return {
                 css: {
                     completed: this.completed,
                     editing: this.editMode
                 },
-
                 event: {
                     dblclick: this.beginEdit
                 }
             };
-        }
+        },
+        'todo-edit': function () {
+            var item = this;
 
+            return {
+                value: this.title,
+                valueUpdate: 'afterkeydown',
+                event: {
+                    keyup: function (data, e) {
+                        if (e.keyCode === ENTER_KEY) {
+                            item.endEdit();
+                        } else if (e.keyCode === ESCAPE_KEY) {
+                            item.cancelEdit();
+                        }
+                    },
+                    blur: function () {
+                        item.endEdit();
+                    }
+                },
+                hasFocus: this.editMode
+            };
+        },
+        'todo-count-text': function () {
+            return {
+                text: (this.items().length === 1 ? 'item' : 'items') + ' left'
+            };
+        },
+        'todo-clear-completed': function () {
+            return {
+                visible: this.completedItems().length > 0,
+                text: 'Clear completed (' + this.completedItems().length + ')',
+                click: this.removeCompletedItems
+            };
+        }
     };
 });
-
-define('text!app/todo/views/todo.html',[],function () { return '<div id="todo_items_template">\r\n    <section id="main" data-class="todo-visible">\r\n        <input id="toggle-all" type="checkbox" data-bind="checked: checkAll">\r\n        <label for="toggle-all">Mark all as complete</label>\r\n        <ul id="todo-list" data-bind="foreach: items">\r\n            <li class data-bind="css:{ completed: completed}">\r\n                <div class="view">\r\n                    <input class="toggle" type="checkbox" data-bind="checked: completed"/>\r\n                    <label data-bind="text: title"></label>\r\n                    <button class="destroy" data-bind="click: remove"></button>\r\n                </div>\r\n                <input class="edit" data-class="todo-edit"/>\r\n            </li>\r\n        </ul>\r\n    </section>\r\n\r\n    <footer id="footer" data-class="todo-visible">\r\n        <!-- This should be `0 items left` by default -->\r\n        <span id="todo-count"><strong>1</strong> item left</span>\r\n        <!-- Remove this if you don\'t implement routing -->\r\n        <ul id="filters">\r\n            <li>\r\n                <a class="selected" href="#/">All</a>\r\n            </li>\r\n            <li>\r\n                <a href="#/active">Active</a>\r\n            </li>\r\n            <li>\r\n                <a href="#/completed">Completed</a>\r\n            </li>\r\n        </ul>\r\n        <!-- Hidden if no completed items are left -->\r\n        <button id="clear-completed">Clear completed (1)</button>\r\n    </footer>\r\n</div>\r\n\r\n<div id="todo_input_template">\r\n    <input id="new-todo" data-class="todo-input" placeholder="What needs to be done?" autofocus>\r\n</div>';});
+define('text!app/todo/views/todo.html',[],function () { return '<div id="todo_items_template">\r\n    <section id="main" data-class="todo-visible">\r\n        <input id="toggle-all" type="checkbox" data-bind="checked: checkAll">\r\n        <label for="toggle-all">Mark all as complete</label>\r\n        <ul id="todo-list" data-bind="foreach: items">\r\n            <li class class="todo-item">\r\n                <div class="view">\r\n                    <input class="toggle" type="checkbox" data-bind="checked: completed"/>\r\n                    <label data-bind="text: title"></label>\r\n                    <button class="destroy" data-bind="click: remove"></button>\r\n                </div>\r\n                <input class="edit" data-class="todo-edit"/>\r\n            </li>\r\n        </ul>\r\n    </section>\r\n\r\n    <footer id="footer" data-class="todo-visible">\r\n        <!-- This should be `0 items left` by default -->\r\n        <span id="todo-count">\r\n            <strong data-bind="text: items().length"></strong>\r\n            <!-- ko class:todo-count-text -->\r\n            <!-- /ko -->\r\n        </span>\r\n        <!-- Remove this if you don\'t implement routing -->\r\n        <ul id="filters">\r\n            <li>\r\n                <a class="selected" href="#/">All</a>\r\n            </li>\r\n            <li>\r\n                <a href="#/active">Active</a>\r\n            </li>\r\n            <li>\r\n                <a href="#/completed">Completed</a>\r\n            </li>\r\n        </ul>\r\n        <!-- Hidden if no completed items are left -->\r\n        <button id="clear-completed" data-class="todo-clear-completed"></button>\r\n    </footer>\r\n</div>\r\n\r\n<div id="todo_input_template">\r\n    <input id="new-todo" data-class="todo-input" placeholder="What needs to be done?" autofocus>\r\n</div>';});
 
 define('css!app/todo/styles/todo',[],function(){});
 /*global define */

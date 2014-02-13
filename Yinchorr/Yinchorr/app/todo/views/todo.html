@@ -3,7 +3,7 @@
         <input id="toggle-all" type="checkbox" data-bind="checked: checkAll">
         <label for="toggle-all">Mark all as complete</label>
         <ul id="todo-list" data-bind="foreach: items">
-            <li class data-bind="css:{ completed: completed}">
+            <li class class="todo-item">
                 <div class="view">
                     <input class="toggle" type="checkbox" data-bind="checked: completed"/>
                     <label data-bind="text: title"></label>
@@ -16,7 +16,11 @@
 
     <footer id="footer" data-class="todo-visible">
         <!-- This should be `0 items left` by default -->
-        <span id="todo-count"><strong>1</strong> item left</span>
+        <span id="todo-count">
+            <strong data-bind="text: items().length"></strong>
+            <!-- ko class:todo-count-text -->
+            <!-- /ko -->
+        </span>
         <!-- Remove this if you don't implement routing -->
         <ul id="filters">
             <li>
@@ -30,7 +34,7 @@
             </li>
         </ul>
         <!-- Hidden if no completed items are left -->
-        <button id="clear-completed">Clear completed (1)</button>
+        <button id="clear-completed" data-class="todo-clear-completed"></button>
     </footer>
 </div>
 

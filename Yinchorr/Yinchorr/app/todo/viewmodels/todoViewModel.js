@@ -1,48 +1,77 @@
-﻿/*global define */
+﻿/*global define,localStorage */
 define([
     'sandbox!todo',
     'app/todo/viewmodels/itemViewModel'
 ], function (
     sandbox,
-    // have to add any added modlels here
     itemViewModel
 ) {
     'use strict';
 
     return function () {
-        var observable = sandbox.mvvm.observable,
-            observableArray = sandbox.mvvm.observableArray,
+        var observableArray = sandbox.mvvm.observableArray,
+            observable = sandbox.mvvm.observable,
             has = sandbox.object.has,
-            // need to pull in computed here didn't see that one
             computed = sandbox.mvvm.computed,
             //properties
             items = observableArray(),
-            newItem = observable(), // have to remember to use , instead of ; on these
-            // forgot to add checkAll here
-            checkAll;
+            newItem = observable(),
+            checkAll,
+            completedItems;
+
+        function toItem(itemVM) {
+            return {
+                title: itemVM.title(),
+                completed: itemVM.completed()
+            };
+        }
+
+        function toItemViewModel(item) {
+            return itemViewModel(item, items);
+        }
 
         function addItem() {
             var item = newItem();
             if (has(item, "trim") && item.trim()) {
-                items.push(itemViewModel({ title: item, completed: false }, items));
+                items.push(toItemViewModel({ title: item, completed: false }));
             }
             newItem("");
         }
 
+        function removeCompletedItems() {
+            completedItems().forEach(function (item) {
+                item.remove();
+            });
+        }
+
         checkAll = computed({
-            read: function() {
+            read: function () {
                 return items().all("$.completed()");
             },
-            write: function(value) {
-                items().forEach(function(item) { item.completed(value); });
+            write: function (value) {
+                items().forEach(function (item) { item.completed(value); });
             }
+        });
+
+        completedItems = computed(function () {
+            return items().where("$.completed()").toArray();
+        });
+
+        if (has(localStorage['todos-scalejs'])) {
+            items(JSON.parse(localStorage['todos-scalejs']).map(toItemViewModel));
+        }
+
+        computed(function () {
+            localStorage['todos-scalejs'] = JSON.stringify(items().map(toItem));
         });
 
         return {
             items: items,
             newItem: newItem,
             addItem: addItem,
-            checkAll: checkAll
+            checkAll: checkAll,
+            completedItems: completedItems,
+            removeCompletedItems: removeCompletedItems
         };
     };
 });

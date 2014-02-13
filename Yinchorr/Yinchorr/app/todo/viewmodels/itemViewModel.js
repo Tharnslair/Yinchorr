@@ -11,9 +11,11 @@ define([
             //properties
             title = observable(item.title),
             completed = observable(item.completed),
-            editMode = observable(false);
+            editMode = observable(false),
+            previousTitle;
 
         function beginEdit() {
+            previousTitle = this.title();
             editMode(true);
         }
 
@@ -23,14 +25,17 @@ define([
                 title(newTitle);
                 editMode(false);
             } else {
-                //we need to remove the item
-                //if the title is an empty string
                 items.remove(this);
             }
         }
-        
+
         function remove() {
             items.remove(this);
+        }
+
+        function cancelEdit() {
+            title(previousTitle);
+            editMode(false);
         }
 
         return {
@@ -39,7 +44,8 @@ define([
             editMode: editMode,
             beginEdit: beginEdit,
             endEdit: endEdit,
-            remove: remove
+            remove: remove,
+            cancelEdit: cancelEdit
         };
     };
 });
